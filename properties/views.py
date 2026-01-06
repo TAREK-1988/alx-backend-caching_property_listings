@@ -1,22 +1,18 @@
 from django.http import JsonResponse
 from django.views.decorators.cache import cache_page
 
-from .utils import get_all_properties, get_redis_cache_metrics
+from .models import Property
 
 
 @cache_page(60 * 15)
 def property_list(request):
-    properties = get_all_properties()
-
-    # Optional: include metrics (useful for manual review/debugging)
-    # You can remove this line if you want pure listing only.
-    metrics = get_redis_cache_metrics()
-
-    return JsonResponse(
-        {
-            "count": len(properties),
-            "results": properties,
-            "cache_metrics": metrics,
-        },
-        safe=False
+    properties_qs = Property.objects.all().values(
+        "id",
+        "title",
+        "description",
+        "price",
+        "location",
+        "created_at",
     )
+    data = list(properties_qs)
+    return JsonResponse({"data": data})
